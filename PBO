@@ -1,7 +1,95 @@
-Method run() dieksekusi ketika...
-*
-konstruktor selesai
-obyek dibuat
-otomatis selalu
-tidak dipanggil
-start() dipanggil
+package materiThread;
+
+import java.awt.*;
+import java.util.*;
+import javax.swing.*;
+
+public class SimulasiDownload extends JFrame {
+    private JPanel panelProgress;
+
+    public SimulasiDownload() {
+        setTitle("Simulasi Download MultiThread");
+        setSize(500, 300);
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setResizable(false);
+        setLocationRelativeTo(null); // posisi jendela ditengah
+
+        // panel utama dengan tata letak GridBagLayout
+        panelProgress = new JPanel(new GridBagLayout());
+        panelProgress.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+        add(panelProgress);
+    }
+
+    // method untuk menambahkan progress bar baru ke GUI
+    public void tambahProgressDownload(JProgressBar progressBar, JLabel label) {
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.gridx = 0;
+        gbc.gridy = GridBagConstraints.RELATIVE;
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.insets = new Insets(5, 5, 5, 5); // jarak antar komponen
+        gbc.weightx = 1.0;
+
+        panelProgress.add(label, gbc);
+        panelProgress.add(progressBar, gbc);
+        revalidate();
+        repaint();
+    }
+
+    public static void main(String[] args) {
+        SwingUtilities.invokeLater(() -> {
+            SimulasiDownload frame = new SimulasiDownload();
+            frame.setVisible(true);
+
+            // daftar nama file yg diunduh
+            String[] namaFile = {"File-1.zip", "Gambar.jpg", "Laporan.pdf", "Video.mp4"};
+
+            // loop untuk membuat thread untuk setiap file
+            for (String file : namaFile) {
+                JProgressBar progressBar = new JProgressBar(0, 100);
+                progressBar.setStringPainted(true);
+                JLabel label = new JLabel("Mengunduh " + file);
+
+                frame.tambahProgressDownload(progressBar, label);
+
+                // membuat dan menjalankan thread untuk setiap unduhan
+                Thread downloadThread = new Thread(new DownloadTask(file, progressBar));
+                downloadThread.start(); // memulai thread
+            }
+        });
+    }
+}
+
+// class downloadTask
+class DownloadTask implements Runnable {
+    private String namaFile;
+    private JProgressBar progressBar;
+
+    public DownloadTask(String namaFile, JProgressBar progressBar) {
+        this.namaFile = namaFile;
+        this.progressBar = progressBar;
+    }
+
+    @Override
+    public void run() {
+        System.out.println("Memulai unduhan untuk : " + namaFile);
+
+        // simulasi proses unduhan dengan menunda eksekusi
+        for (int i = 0; i <= 100; i += 5) {
+            final int progres = i;
+            SwingUtilities.invokeLater(() -> {
+                progressBar.setValue(progres);
+                if (progres == 100) {
+                    progressBar.setString("Selesai!");
+                }
+            });
+            try {
+                // Mensimulasikan waktu yang dibutuhkan untuk mengunduh
+                // Ini terkait dengan soal #35 (Thread.sleep)
+                Thread.sleep((long) (Math.random() * 200)); // waktu acak antara 0-200ms
+            } catch (InterruptedException e) {
+                System.out.println("Unduhan " + namaFile + " terinterupsi.");
+            }
+        }
+        System.out.println("Unduhan " + namaFile + " selesai.");
+    }
+}
